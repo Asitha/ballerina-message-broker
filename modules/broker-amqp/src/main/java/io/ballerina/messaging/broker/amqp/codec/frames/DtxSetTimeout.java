@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.XaResult;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -91,11 +94,16 @@ public class DtxSetTimeout extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            int format = buf.readUnsignedShort();
-            LongString globalId = LongString.parse(buf);
-            LongString branchId = LongString.parse(buf);
-            long timeout = buf.readLong();
-            return new DtxSetTimeout(channel, format, globalId, branchId, timeout);
+            try {
+                int format = buf.readUnsignedShort();
+                LongString globalId = LongString.parse(buf);
+                LongString branchId = LongString.parse(buf);
+                long timeout = buf.readLong();
+                return new DtxSetTimeout(channel, format, globalId, branchId, timeout);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error decoding dtx.timeout frame.", e);
+            }
         };
     }
 }

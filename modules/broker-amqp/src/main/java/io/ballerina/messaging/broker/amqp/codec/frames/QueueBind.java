@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -53,8 +56,8 @@ public class QueueBind extends MethodFrame {
     private final boolean noWait;
     private final FieldTable arguments;
 
-    public QueueBind(int channel, ShortString queue, ShortString exchange, ShortString routingKey, boolean noWait,
-            FieldTable arguments) {
+    QueueBind(int channel, ShortString queue, ShortString exchange, ShortString routingKey, boolean noWait,
+              FieldTable arguments) {
         super(channel, CLASS_ID, METHOD_ID);
         this.queue = queue;
         this.exchange = exchange;
@@ -138,14 +141,18 @@ public class QueueBind extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            buf.skipBytes(2);
-            ShortString queue = ShortString.parse(buf);
-            ShortString exchange = ShortString.parse(buf);
-            ShortString routingKey = ShortString.parse(buf);
-            boolean noWait = buf.readBoolean();
-            FieldTable arguments = FieldTable.parse(buf);
+            try {
+                buf.skipBytes(2);
+                ShortString queue = ShortString.parse(buf);
+                ShortString exchange = ShortString.parse(buf);
+                ShortString routingKey = ShortString.parse(buf);
+                boolean noWait = buf.readBoolean();
+                FieldTable arguments = FieldTable.parse(buf);
 
-            return new QueueBind(channel, queue, exchange, routingKey, noWait, arguments);
+                return new QueueBind(channel, queue, exchange, routingKey, noWait, arguments);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding queue bind arguments", e);
+            }
         };
     }
 }

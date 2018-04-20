@@ -27,9 +27,9 @@ import io.ballerina.messaging.broker.amqp.codec.auth.AuthenticationStrategy;
  * Keep factory classes for different class IDs and method IDs.
  */
 public class AmqMethodRegistry {
-    public AmqMethodBodyFactory[][] factories = new AmqMethodBodyFactory[101][];
+    private final AmqMethodBodyFactory[][] factories = new AmqMethodBodyFactory[101][];
 
-    public AmqMethodRegistry(AuthenticationStrategy authenticationStrategy) {
+    AmqMethodRegistry(AuthenticationStrategy authenticationStrategy) {
         factories[10] = new AmqMethodBodyFactory[52];
         factories[10][11] = ConnectionStartOk.getFactory(authenticationStrategy);
         factories[10][20] = ConnectionSecure.getFactory();

@@ -22,6 +22,7 @@ package io.ballerina.messaging.broker.core.store.dao.impl;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.ballerina.messaging.broker.common.BaseDao;
 import io.ballerina.messaging.broker.common.DaoException;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.core.Broker;
 import io.ballerina.messaging.broker.core.ChunkConverter;
 import io.ballerina.messaging.broker.core.ContentChunk;
@@ -228,7 +229,7 @@ public class DtxCrudOperationsDao extends BaseDao {
             populateContent(connection, internalXid, enqueuedMessages);
             updateQueueMapping(connection, internalXid, enqueuedMessages);
             return enqueuedMessages.values();
-        } catch (Exception e) {
+        } catch (FieldDecodingException | SQLException e) {
             throw new DaoException("Error occurred while retrieving enqueued dtx messages", e);
         }
     }
@@ -280,7 +281,7 @@ public class DtxCrudOperationsDao extends BaseDao {
     }
 
     private void populateMetadata(Connection connection, long internalXid, HashMap<Long, Message> enqueuedMessages)
-            throws Exception {
+            throws FieldDecodingException, SQLException {
         PreparedStatement retrieveMetadataStmt = null;
         ResultSet resultSet = null;
         try {

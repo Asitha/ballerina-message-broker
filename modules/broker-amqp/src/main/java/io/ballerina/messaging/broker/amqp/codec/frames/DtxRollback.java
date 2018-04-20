@@ -19,12 +19,15 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.ConnectionException;
 import io.ballerina.messaging.broker.amqp.codec.XaResult;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -51,7 +54,7 @@ public class DtxRollback extends MethodFrame {
     private final LongString globalId;
     private final LongString branchId;
 
-    public DtxRollback(int channel, int format, LongString globalId, LongString branchId) {
+    private DtxRollback(int channel, int format, LongString globalId, LongString branchId) {
         super(channel, CLASS_ID, METHOD_ID);
         this.format = format;
         this.globalId = globalId;
@@ -99,10 +102,14 @@ public class DtxRollback extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            int format = buf.readUnsignedShort();
-            LongString globalId = LongString.parse(buf);
-            LongString branchId = LongString.parse(buf);
-            return new DtxRollback(channel, format, globalId, branchId);
+            try {
+                int format = buf.readUnsignedShort();
+                LongString globalId = LongString.parse(buf);
+                LongString branchId = LongString.parse(buf);
+                return new DtxRollback(channel, format, globalId, branchId);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding dtx.rollback frame", e);
+            }
         };
     }
 }

@@ -73,7 +73,7 @@ public class FieldTableTest {
     }
 
     @Test
-    public void testHashCode() throws Exception {
+    public void testHashCode() {
         Map<ShortString, FieldValue> properties = new HashMap<>();
         properties.put(testKey, testValue);
         FieldTable similar = new FieldTable(properties);

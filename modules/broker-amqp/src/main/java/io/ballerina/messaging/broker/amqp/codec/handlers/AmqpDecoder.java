@@ -19,6 +19,8 @@
 
 package io.ballerina.messaging.broker.amqp.codec.handlers;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.frames.AmqMethodBodyFactory;
 import io.ballerina.messaging.broker.amqp.codec.frames.AmqMethodRegistry;
 import io.ballerina.messaging.broker.amqp.codec.frames.AmqpBadMessage;
@@ -84,10 +86,6 @@ public class AmqpDecoder extends ByteToMessageDecoder {
                 // Keep discarding until disconnection.
                 buffer.skipBytes(actualReadableBytes());
                 break;
-
-            default:
-                // Shouldn't reach here.
-                throw new Error();
         }
 
     }
@@ -117,7 +115,7 @@ public class AmqpDecoder extends ByteToMessageDecoder {
         ctx.close();
     }
 
-    private void parseFrame(ByteBuf buffer, List<Object> out) throws Exception {
+    private void parseFrame(ByteBuf buffer, List<Object> out) throws AmqFrameDecodingException {
         buffer.markReaderIndex();
         if (buffer.readableBytes() > FRAME_SIZE_WITHOUT_PAYLOAD) {
             byte type = buffer.readByte();
@@ -130,7 +128,7 @@ public class AmqpDecoder extends ByteToMessageDecoder {
                 return;
             }
 
-            GeneralFrame frame = null;
+            GeneralFrame frame;
             switch (type) {
                 case 1: // Method
                     short amqpClass = buffer.readShort();
@@ -146,12 +144,14 @@ public class AmqpDecoder extends ByteToMessageDecoder {
                     frame = ContentFrame.parse(buffer, channel, payloadSize);
                     break;
                 case 4: // Heartbeat
-                    throw new Exception("Method Not implemented");
+                    throw new AmqFrameDecodingException(AmqConstant.NOT_IMPLEMENTED, "Method Not implemented");
+                    default:
+                        throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Unknown frame type: " + type);
             }
 
             byte frameEnd = buffer.readByte();
             if (frameEnd != (byte) GeneralFrame.FRAME_END) {
-                throw new Exception("Invalid AMQP frame");
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Invalid AMQP frame");
             }
 
             out.add(frame);

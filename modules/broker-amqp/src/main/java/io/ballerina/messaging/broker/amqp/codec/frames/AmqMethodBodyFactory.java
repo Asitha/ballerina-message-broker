@@ -19,11 +19,12 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.netty.buffer.ByteBuf;
 
 /**
  * Factory interface used to create AMQP method frame objects.
  */
 public interface AmqMethodBodyFactory {
-    MethodFrame newInstance(ByteBuf buf, int channel, long size) throws Exception;
+    MethodFrame newInstance(ByteBuf buf, int channel, long size) throws AmqFrameDecodingException;
 }

@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -55,8 +58,8 @@ public class ExchangeDeclare extends MethodFrame {
     private final boolean noWait;
     private final FieldTable arguments;
 
-    public ExchangeDeclare(int channel, ShortString exchange, ShortString type, boolean passive, boolean durable,
-            boolean noWait, FieldTable arguments) {
+    ExchangeDeclare(int channel, ShortString exchange, ShortString type, boolean passive, boolean durable,
+                    boolean noWait, FieldTable arguments) {
         super(channel, CLASS_ID, METHOD_ID);
         this.exchange = exchange;
         this.type = type;
@@ -167,15 +170,20 @@ public class ExchangeDeclare extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            buf.skipBytes(2);
-            ShortString exchange = ShortString.parse(buf);
-            ShortString type = ShortString.parse(buf);
-            byte flags = buf.readByte();
-            boolean passive = (flags & 0x1) == 0x1;
-            boolean durable = (flags & 0x2) == 0x2;
-            boolean noWait = (flags & 0x10) == 0x10;
-            FieldTable arguments = FieldTable.parse(buf);
-            return new ExchangeDeclare(channel, exchange, type, passive, durable, noWait, arguments);
+            try {
+                buf.skipBytes(2);
+                ShortString exchange = ShortString.parse(buf);
+                ShortString type = ShortString.parse(buf);
+                byte flags = buf.readByte();
+                boolean passive = (flags & 0x1) == 0x1;
+                boolean durable = (flags & 0x2) == 0x2;
+                boolean noWait = (flags & 0x10) == 0x10;
+                FieldTable arguments = FieldTable.parse(buf);
+                return new ExchangeDeclare(channel, exchange, type, passive, durable, noWait, arguments);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error decoding exchange.declare arguments", e);
+            }
         };
     }
 }

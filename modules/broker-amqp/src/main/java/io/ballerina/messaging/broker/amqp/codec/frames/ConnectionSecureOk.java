@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ConnectionException;
 import io.ballerina.messaging.broker.amqp.codec.auth.AuthenticationStrategy;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
 import io.ballerina.messaging.broker.core.BrokerException;
@@ -48,9 +51,9 @@ public class ConnectionSecureOk extends MethodFrame {
 
     private AuthenticationStrategy authenticationStrategy;
 
-    public ConnectionSecureOk(int channel,
-                              LongString response,
-                              AuthenticationStrategy authenticationStrategy) {
+    ConnectionSecureOk(int channel,
+                       LongString response,
+                       AuthenticationStrategy authenticationStrategy) {
         super(channel, CLASS_ID, METHOD_ID);
         this.response = response;
         this.authenticationStrategy = authenticationStrategy;
@@ -84,8 +87,13 @@ public class ConnectionSecureOk extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory(AuthenticationStrategy authenticationStrategy) {
         return (buf, channel, size) -> {
-            LongString response = LongString.parse(buf);
-            return new ConnectionSecureOk(channel, response, authenticationStrategy);
+            try {
+                LongString response = LongString.parse(buf);
+                return new ConnectionSecureOk(channel, response, authenticationStrategy);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error occurred decoding connection.secure-ok frame", e);
+            }
         };
     }
 

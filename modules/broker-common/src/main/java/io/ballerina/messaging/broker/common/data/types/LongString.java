@@ -20,6 +20,7 @@
 package io.ballerina.messaging.broker.common.data.types;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.netty.buffer.ByteBuf;
 
 import java.nio.charset.StandardCharsets;
@@ -56,11 +57,11 @@ public class LongString implements EncodableData {
         buf.writeBytes(content);
     }
 
-    public static LongString parse(ByteBuf buf) throws Exception {
+    public static LongString parse(ByteBuf buf) throws FieldDecodingException {
         int size = (int) buf.readUnsignedInt();
 
         if (size < 0) {
-            throw new Exception("Invalid string length");
+            throw new FieldDecodingException("Invalid string length");
         }
 
         byte[] data = new byte[size];

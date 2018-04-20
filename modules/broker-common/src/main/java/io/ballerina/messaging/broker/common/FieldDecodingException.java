@@ -14,21 +14,17 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 
-package io.ballerina.messaging.broker.amqp.codec;
+package io.ballerina.messaging.broker.common;
 
 /**
- * Keep constants related to AMQP codec which are shared in many places.
+ * Exception class to handle field table related decoding exceptions.
  */
-public class AmqConstant {
+public class FieldDecodingException extends Exception {
 
-    public static final int COMMAND_INVALID = 503;
-
-    public static final int FRAME_ERROR = 501;
-    public static final int NOT_IMPLEMENTED = 540;
-
-    private AmqConstant() {
+    public FieldDecodingException(String message) {
+        super(message);
     }
+
 }

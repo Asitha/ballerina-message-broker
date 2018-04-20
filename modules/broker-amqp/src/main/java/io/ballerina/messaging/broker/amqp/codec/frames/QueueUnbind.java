@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ConnectionException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -53,8 +56,8 @@ public class QueueUnbind extends MethodFrame {
 
     private final FieldTable arguments;
 
-    public QueueUnbind(int channel, ShortString queue, ShortString exchange, ShortString routingKey,
-                       FieldTable arguments) {
+    private QueueUnbind(int channel, ShortString queue, ShortString exchange, ShortString routingKey,
+                        FieldTable arguments) {
         super(channel, CLASS_ID, METHOD_ID);
         this.queue = queue;
         this.exchange = exchange;
@@ -99,12 +102,17 @@ public class QueueUnbind extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            buf.skipBytes(2);
-            ShortString queue = ShortString.parse(buf);
-            ShortString exchange = ShortString.parse(buf);
-            ShortString routingKey = ShortString.parse(buf);
-            FieldTable arguments = FieldTable.parse(buf);
-            return new QueueUnbind(channel, queue, exchange, routingKey, arguments);
+            try {
+                buf.skipBytes(2);
+                ShortString queue = ShortString.parse(buf);
+                ShortString exchange = ShortString.parse(buf);
+                ShortString routingKey = ShortString.parse(buf);
+                FieldTable arguments = FieldTable.parse(buf);
+                return new QueueUnbind(channel, queue, exchange, routingKey, arguments);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error decoding queue.unbind arguments", e);
+            }
         };
     }
 }

@@ -20,6 +20,8 @@
 package io.ballerina.messaging.broker.core.store.dao.impl;
 
 import io.ballerina.messaging.broker.common.BaseDao;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
+import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.core.Binding;
 import io.ballerina.messaging.broker.core.BrokerException;
@@ -111,7 +113,7 @@ class BindingDaoImpl extends BaseDao implements BindingDao {
                 bindingCollector.addBinding(queueName, routingKey, fieldTable);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | ValidationException | FieldDecodingException e) {
             String message = "Error occurred while retrieving bindings";
             rollback(connection, message);
             throw new BrokerException(message, e);

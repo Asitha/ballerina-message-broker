@@ -19,11 +19,14 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.XaResult;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -53,7 +56,7 @@ public class DtxStart extends MethodFrame {
     private final boolean join;
     private final boolean resume;
 
-    public DtxStart(int channel, int format, LongString globalId, LongString branchId, boolean join, boolean resume) {
+    private DtxStart(int channel, int format, LongString globalId, LongString branchId, boolean join, boolean resume) {
         super(channel, CLASS_ID, METHOD_ID);
         this.format = format;
         this.globalId = globalId;
@@ -105,13 +108,17 @@ public class DtxStart extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            int format = buf.readUnsignedShort();
-            LongString globalId = LongString.parse(buf);
-            LongString branchId = LongString.parse(buf);
-            byte flags = buf.readByte();
-            boolean join = (flags & 0x1) == 0x1;
-            boolean resume = (flags & 0x2) == 0x2;
-            return new DtxStart(channel, format, globalId, branchId, join, resume);
+            try {
+                int format = buf.readUnsignedShort();
+                LongString globalId = LongString.parse(buf);
+                LongString branchId = LongString.parse(buf);
+                byte flags = buf.readByte();
+                boolean join = (flags & 0x1) == 0x1;
+                boolean resume = (flags & 0x2) == 0x2;
+                return new DtxStart(channel, format, globalId, branchId, join, resume);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding dtx.start frame", e);
+            }
         };
     }
 }

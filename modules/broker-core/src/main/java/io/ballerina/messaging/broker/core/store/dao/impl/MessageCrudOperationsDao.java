@@ -21,6 +21,7 @@ package io.ballerina.messaging.broker.core.store.dao.impl;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.ballerina.messaging.broker.common.BaseDao;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.core.BrokerException;
 import io.ballerina.messaging.broker.core.ChunkConverter;
 import io.ballerina.messaging.broker.core.ContentChunk;
@@ -67,7 +68,7 @@ class MessageCrudOperationsDao extends BaseDao {
     @SuppressFBWarnings(
             value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
             justification = "Return value of context.stop() is not required.")
-    public void storeMessages(Connection connection, Collection<Message> messageList) throws SQLException {
+    void storeMessages(Connection connection, Collection<Message> messageList) throws SQLException {
 
         PreparedStatement metadataStmt = null;
         PreparedStatement contentStmt = null;
@@ -129,8 +130,8 @@ class MessageCrudOperationsDao extends BaseDao {
         metadataStmt.addBatch();
     }
 
-    public void detachFromQueue(Connection connection,
-                                Map<String, QueueDetachEventList> detachableMessageMap) throws BrokerException {
+    void detachFromQueue(Connection connection,
+                         Map<String, QueueDetachEventList> detachableMessageMap) throws BrokerException {
         PreparedStatement statement = null;
         try {
             statement = connection.prepareStatement(RDBMSConstants.PS_DELETE_FROM_QUEUE);
@@ -179,7 +180,7 @@ class MessageCrudOperationsDao extends BaseDao {
         }
     }
 
-    public Collection<Message> readAll(Connection connection, String queueName) throws BrokerException {
+    Collection<Message> readAll(Connection connection, String queueName) throws BrokerException {
         Map<Long, Message> messageList = new LinkedHashMap<>();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -259,7 +260,7 @@ class MessageCrudOperationsDao extends BaseDao {
                             message.setMetadata(metadata);
                         }
                     }
-                } catch (Exception e) {
+                } catch (FieldDecodingException e) {
                     throw new BrokerException("Error occurred while parsing metadata properties", e);
                 }
             }

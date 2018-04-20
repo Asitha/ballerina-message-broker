@@ -19,10 +19,13 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.ValidationException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
@@ -142,7 +145,7 @@ public class QueueDeclare extends MethodFrame {
     /**
      * Getter for passive.
      */
-    public boolean isPassive() {
+    boolean isPassive() {
         return passive;
     }
 
@@ -156,14 +159,14 @@ public class QueueDeclare extends MethodFrame {
     /**
      * Getter for exclusive.
      */
-    public boolean isExclusive() {
+    boolean isExclusive() {
         return exclusive;
     }
 
     /**
      * Getter for autoDelete.
      */
-    public boolean isAutoDelete() {
+    boolean isAutoDelete() {
         return autoDelete;
     }
 
@@ -183,17 +186,22 @@ public class QueueDeclare extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            buf.skipBytes(2);
-            ShortString queue = ShortString.parse(buf);
-            byte flags = buf.readByte();
-            boolean passive = (flags & 0x1) == 1;
-            boolean durable = (flags & 0x2) == 0x2;
-            boolean exclusive = (flags & 0x4) == 0x4;
-            boolean autoDelete = (flags & 0x8) == 0x8;
-            boolean noWait = (flags & 0x10) == 0x10;
-            FieldTable arguments = FieldTable.parse(buf);
+            try {
+                buf.skipBytes(2);
+                ShortString queue = ShortString.parse(buf);
+                byte flags = buf.readByte();
+                boolean passive = (flags & 0x1) == 1;
+                boolean durable = (flags & 0x2) == 0x2;
+                boolean exclusive = (flags & 0x4) == 0x4;
+                boolean autoDelete = (flags & 0x8) == 0x8;
+                boolean noWait = (flags & 0x10) == 0x10;
+                FieldTable arguments = FieldTable.parse(buf);
 
-            return new QueueDeclare(channel, queue, passive, durable, exclusive, autoDelete, noWait, arguments);
+                return new QueueDeclare(channel, queue, passive, durable, exclusive, autoDelete, noWait, arguments);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error occurred decoding queue.declare arguments", e);
+            }
         };
     }
 }

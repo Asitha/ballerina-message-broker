@@ -19,7 +19,10 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,7 +38,7 @@ public class DtxRecoverOk extends MethodFrame {
     private static final short METHOD_ID = 81;
     private final LongString inDoubt;
 
-    public DtxRecoverOk(int channel, LongString inDoubt) {
+    private DtxRecoverOk(int channel, LongString inDoubt) {
         super(channel, CLASS_ID, METHOD_ID);
         this.inDoubt = inDoubt;
     }
@@ -57,8 +60,12 @@ public class DtxRecoverOk extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            LongString inDoubt = LongString.parse(buf);
-            return new DtxRecoverOk(channel, inDoubt);
+            try {
+                LongString inDoubt = LongString.parse(buf);
+                return new DtxRecoverOk(channel, inDoubt);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding dtx.recover-ok frame", e);
+            }
         };
     }
 }

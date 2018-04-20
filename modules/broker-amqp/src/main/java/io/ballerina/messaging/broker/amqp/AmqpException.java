@@ -28,4 +28,8 @@ public class AmqpException extends Exception {
         super(message);
     }
 
+    public AmqpException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
+
 }

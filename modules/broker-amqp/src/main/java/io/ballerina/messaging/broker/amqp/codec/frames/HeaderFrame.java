@@ -19,9 +19,12 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.InMemoryMessageAggregator;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.EncodableData;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.FieldValue;
@@ -214,7 +217,7 @@ public class HeaderFrame extends GeneralFrame {
         }
     }
 
-    public static HeaderFrame parse(ByteBuf buf, int channel) throws Exception {
+    public static HeaderFrame parse(ByteBuf buf, int channel) throws AmqFrameDecodingException {
         int classId = buf.readUnsignedShort();
         // ignore weight
         buf.skipBytes(2);
@@ -229,7 +232,18 @@ public class HeaderFrame extends GeneralFrame {
             int otherPropertyFlags = buf.readUnsignedShort();
             hasMoreProperties = (otherPropertyFlags & LAST_BIT_MASK) != 0;
         }
+        try {
+            readProperties(buf, headerFrame, propertyFlags);
+            return headerFrame;
+        } catch (FieldDecodingException e) {
+            throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding header properties", e);
+        }
 
+
+    }
+
+    private static void readProperties(ByteBuf buf, HeaderFrame headerFrame, int propertyFlags)
+            throws FieldDecodingException {
         // read known properties
         if ((propertyFlags & CONTENT_TYPE_MASK) != 0) {
             headerFrame.setContentType(ShortString.parse(buf));
@@ -284,7 +298,6 @@ public class HeaderFrame extends GeneralFrame {
         }
 
         headerFrame.properties.add(PROPERTY_FLAGS, FieldValue.parseLongInt(propertyFlags));
-        return headerFrame;
     }
 
     public void setContentType(ShortString contentType) {

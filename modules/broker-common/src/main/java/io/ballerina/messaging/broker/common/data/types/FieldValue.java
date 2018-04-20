@@ -19,6 +19,7 @@
 
 package io.ballerina.messaging.broker.common.data.types;
 
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -72,17 +73,17 @@ public class FieldValue implements EncodableData {
         FIELD_TABLE('F'),
         SHORT_STRING('z'); // define internally because HeaderFrame use FieldTable
 
-        private final char type;
+        private final char value;
 
         Type(char type) {
-            this.type = type;
+            this.value = type;
         }
 
         public char getChar() {
-            return type;
+            return value;
         }
 
-        public static Type valueOf(char value) throws Exception {
+        public static Type valueOf(char value) throws FieldDecodingException {
             switch (value) {
                 case 't':
                     return BOOLEAN;
@@ -113,7 +114,7 @@ public class FieldValue implements EncodableData {
                 case 'z':
                     return SHORT_STRING;
                 default:
-                    throw new Exception("Unknown field table data type. Char value: '" + value + "'");
+                    throw new FieldDecodingException("Unknown field table data type. Char value: '" + value + "'");
             }
         }
     }
@@ -142,7 +143,7 @@ public class FieldValue implements EncodableData {
         value.write(buf);
     }
 
-    public static FieldValue parse(ByteBuf buf) throws Exception {
+    public static FieldValue parse(ByteBuf buf) throws FieldDecodingException {
         Type type = Type.valueOf((char) buf.readByte());
         switch (type) {
             case BOOLEAN:
@@ -174,7 +175,7 @@ public class FieldValue implements EncodableData {
             case SHORT_STRING:
                 return FieldValue.parseShortString(ShortString.parse(buf));
             default:
-                throw new Exception("Unsupported AMQP field value type " + type);
+                throw new FieldDecodingException("Unsupported AMQP field value type " + type);
         }
     }
 

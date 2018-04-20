@@ -19,6 +19,7 @@
 
 package io.ballerina.messaging.broker.core;
 
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.FieldValue;
 import io.ballerina.messaging.broker.common.data.types.ShortShortInt;
@@ -76,7 +77,8 @@ public class Metadata {
         this.headers = new FieldTable();
     }
 
-    public Metadata(String routingKey, String exchangeName, long contentLength, byte[] propertyBytes) throws Exception {
+    public Metadata(String routingKey, String exchangeName, long contentLength, byte[] propertyBytes)
+            throws FieldDecodingException {
         this.routingKey = routingKey;
         this.exchangeName = exchangeName;
         this.contentLength = contentLength;
@@ -163,7 +165,7 @@ public class Metadata {
         return bytes;
     }
 
-    private void setPropertiesFromBytes(byte[] bytes) throws Exception {
+    private void setPropertiesFromBytes(byte[] bytes) throws FieldDecodingException {
         ByteBuf buffer = Unpooled.wrappedBuffer(bytes);
         properties = FieldTable.parse(buffer);
         headers = FieldTable.parse(buffer);

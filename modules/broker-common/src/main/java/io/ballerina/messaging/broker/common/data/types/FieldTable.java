@@ -19,6 +19,7 @@
 
 package io.ballerina.messaging.broker.common.data.types;
 
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Collections;
@@ -110,7 +111,7 @@ public class FieldTable implements EncodableData {
                 && properties.equals(((FieldTable) obj).properties);
     }
 
-    public static FieldTable parse(ByteBuf buf) throws Exception {
+    public static FieldTable parse(ByteBuf buf) throws FieldDecodingException {
         long size = buf.readUnsignedInt();
         long readBytes = 0L;
         Map<ShortString, FieldValue> properties = new HashMap<>();

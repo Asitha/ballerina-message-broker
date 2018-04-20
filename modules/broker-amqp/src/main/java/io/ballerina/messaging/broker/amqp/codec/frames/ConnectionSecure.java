@@ -19,7 +19,10 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.LongString;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -55,8 +58,14 @@ public class ConnectionSecure extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            LongString challenge = LongString.parse(buf);
-            return new ConnectionSecure(channel, challenge);
+            LongString challenge;
+            try {
+                challenge = LongString.parse(buf);
+                return new ConnectionSecure(channel, challenge);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR,
+                                                    "Error decoding connection.secure challenge string", e);
+            }
         };
     }
 }

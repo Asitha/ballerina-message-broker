@@ -19,11 +19,14 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqConstant;
+import io.ballerina.messaging.broker.amqp.codec.AmqFrameDecodingException;
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.BlockingTask;
 import io.ballerina.messaging.broker.amqp.codec.ChannelException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
 import io.ballerina.messaging.broker.amqp.consumer.AmqpConsumer;
+import io.ballerina.messaging.broker.common.FieldDecodingException;
 import io.ballerina.messaging.broker.common.data.types.FieldTable;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
 import io.ballerina.messaging.broker.core.BrokerAuthException;
@@ -59,8 +62,8 @@ public class BasicConsume extends MethodFrame {
     private final boolean noWait;
     private final FieldTable arguments;
 
-    public BasicConsume(int channel, ShortString queue, ShortString consumerTag, boolean noLocal, boolean noAck,
-            boolean exclusive, boolean noWait, FieldTable arguments) {
+    BasicConsume(int channel, ShortString queue, ShortString consumerTag, boolean noLocal, boolean noAck,
+                 boolean exclusive, boolean noWait, FieldTable arguments) {
         super(channel, CLASS_ID, METHOD_ID);
         this.queue = queue;
         this.consumerTag = consumerTag;
@@ -175,16 +178,20 @@ public class BasicConsume extends MethodFrame {
 
     public static AmqMethodBodyFactory getFactory() {
         return (buf, channel, size) -> {
-            buf.skipBytes(2);
-            ShortString queue = ShortString.parse(buf);
-            ShortString consumerTag = ShortString.parse(buf);
-            byte flags = buf.readByte();
-            boolean noLocal = (flags & 0x1) == 0x1;
-            boolean noAck = (flags & 0x2) == 0x2;
-            boolean exclusive = (flags & 0x4) == 0x4;
-            boolean noWait = (flags & 0x8) == 0x8;
-            FieldTable arguments = FieldTable.parse(buf);
-            return new BasicConsume(channel, queue, consumerTag, noLocal, noAck, exclusive, noWait, arguments);
+            try {
+                buf.skipBytes(2);
+                ShortString queue = ShortString.parse(buf);
+                ShortString consumerTag = ShortString.parse(buf);
+                byte flags = buf.readByte();
+                boolean noLocal = (flags & 0x1) == 0x1;
+                boolean noAck = (flags & 0x2) == 0x2;
+                boolean exclusive = (flags & 0x4) == 0x4;
+                boolean noWait = (flags & 0x8) == 0x8;
+                FieldTable arguments = FieldTable.parse(buf);
+                return new BasicConsume(channel, queue, consumerTag, noLocal, noAck, exclusive, noWait, arguments);
+            } catch (FieldDecodingException e) {
+                throw new AmqFrameDecodingException(AmqConstant.FRAME_ERROR, "Error decoding frame", e);
+            }
         };
     }
 }
