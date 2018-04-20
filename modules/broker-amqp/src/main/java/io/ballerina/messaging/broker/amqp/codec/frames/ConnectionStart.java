@@ -41,8 +41,8 @@ public class ConnectionStart extends MethodFrame {
     private final LongString mechanisms;
     private final LongString locales;
 
-    public ConnectionStart(short channel, byte majorVersion, byte minorVersion,
-            FieldTable serverProperties, LongString mechanisms, LongString locales) {
+    private ConnectionStart(short channel, byte majorVersion, byte minorVersion,
+                            FieldTable serverProperties, LongString mechanisms, LongString locales) {
         super(channel, (short) 10, (short) 10);
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;

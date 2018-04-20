@@ -57,7 +57,7 @@ public class BasicReject extends MethodFrame {
     private final long deliveryTag;
     private final boolean requeue;
 
-    public BasicReject(int channel, long deliveryTag, boolean requeue) {
+    private BasicReject(int channel, long deliveryTag, boolean requeue) {
         super(channel, (short) CLASS_ID, (short) METHOD_ID);
         this.deliveryTag = deliveryTag;
         this.requeue = requeue;

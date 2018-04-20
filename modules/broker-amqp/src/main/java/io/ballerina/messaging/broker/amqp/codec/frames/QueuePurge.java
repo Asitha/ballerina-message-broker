@@ -46,7 +46,7 @@ public class QueuePurge extends MethodFrame {
     private final ShortString queue;
     private final boolean noWait;
 
-    public QueuePurge(int channel, ShortString queue, boolean noWait) {
+    private QueuePurge(int channel, ShortString queue, boolean noWait) {
         super(channel, CLASS_ID, METHOD_ID);
         this.queue = queue;
         this.noWait = noWait;

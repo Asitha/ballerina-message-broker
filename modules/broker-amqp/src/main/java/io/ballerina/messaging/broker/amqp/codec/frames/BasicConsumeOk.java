@@ -23,8 +23,6 @@ import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * AMQP frame for basic.consume
@@ -32,11 +30,10 @@ import org.slf4j.LoggerFactory;
  *     1. consumer­tag (ShortString) - consumer tag
  */
 public class BasicConsumeOk extends MethodFrame {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BasicConsumeOk.class);
 
     private final ShortString consumerTag;
 
-    public BasicConsumeOk(int channel, ShortString consumerTag) {
+    BasicConsumeOk(int channel, ShortString consumerTag) {
         super(channel, (short) 60, (short) 21);
         this.consumerTag = consumerTag;
     }

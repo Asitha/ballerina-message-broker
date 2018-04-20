@@ -36,7 +36,7 @@ public class ConnectionTuneOk extends MethodFrame {
     private final long frameMax;
     private final int heartbeat;
 
-    public ConnectionTuneOk(int channelMax, long frameMax, int heartbeat) {
+    private ConnectionTuneOk(int channelMax, long frameMax, int heartbeat) {
         super(0, (short) 10, (short) 30);
         this.channelMax = channelMax;
         this.frameMax = frameMax;

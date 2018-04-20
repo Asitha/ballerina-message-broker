@@ -36,7 +36,7 @@ public class ChannelOpen extends MethodFrame {
     private static final short CLASS_ID = 20;
     private static final short METHOD_ID = 10;
 
-    public ChannelOpen(int channel) {
+    private ChannelOpen(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 

@@ -35,7 +35,7 @@ public class DtxStartOk extends MethodFrame {
     private static final short METHOD_ID = 21;
     private final int xaResult;
 
-    public DtxStartOk(int channel, int xaResult) {
+    DtxStartOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }

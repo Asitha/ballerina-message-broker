@@ -34,7 +34,7 @@ public class DtxForgetOk extends MethodFrame {
     private static final short METHOD_ID = 51;
     private final int xaResult;
 
-    public DtxForgetOk(int channel, int xaResult) {
+    DtxForgetOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }

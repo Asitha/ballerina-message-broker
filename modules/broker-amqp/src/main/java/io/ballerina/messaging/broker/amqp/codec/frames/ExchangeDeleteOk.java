@@ -45,6 +45,7 @@ public class ExchangeDeleteOk extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
+        // Nothing to be written.
     }
 
     @Override

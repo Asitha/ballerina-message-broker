@@ -44,7 +44,7 @@ public class BasicCancel extends MethodFrame {
 
     private final boolean noWait;
 
-    public BasicCancel(int channel, ShortString consumerTag, boolean noWait) {
+    BasicCancel(int channel, ShortString consumerTag, boolean noWait) {
         super(channel, (short) 60, (short) 30);
         this.consumerTag = consumerTag;
         this.noWait = noWait;

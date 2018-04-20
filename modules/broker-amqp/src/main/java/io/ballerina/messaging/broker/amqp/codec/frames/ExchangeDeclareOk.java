@@ -30,7 +30,7 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class ExchangeDeclareOk extends MethodFrame {
 
-    public ExchangeDeclareOk(int channel) {
+    ExchangeDeclareOk(int channel) {
         super(channel, (short) 40, (short) 11);
     }
 
@@ -41,6 +41,7 @@ public class ExchangeDeclareOk extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
+        // Nothing to be written.
     }
 
     @Override

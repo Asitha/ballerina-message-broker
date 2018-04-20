@@ -34,7 +34,7 @@ public class DtxSetTimeoutOk extends MethodFrame {
     private static final short METHOD_ID = 101;
     private final int xaResult;
 
-    public DtxSetTimeoutOk(int channel, int xaResult) {
+    DtxSetTimeoutOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }

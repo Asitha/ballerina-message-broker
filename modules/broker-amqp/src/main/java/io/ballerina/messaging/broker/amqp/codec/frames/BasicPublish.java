@@ -24,8 +24,6 @@ import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
 import io.ballerina.messaging.broker.common.data.types.ShortString;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * AMQP frame for basic.publish
@@ -37,7 +35,6 @@ import org.slf4j.LoggerFactory;
  *     5. immediate (bit) - request immediate delivery
  */
 public class BasicPublish extends MethodFrame {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BasicPublish.class);
     public static final short CLASS_ID = 60;
     public static final short METHOD_ID = 40;
 
@@ -46,8 +43,8 @@ public class BasicPublish extends MethodFrame {
     private final boolean mandatory;
     private final boolean immediate;
 
-    public BasicPublish(int channel, ShortString exchange, ShortString routingKey, boolean mandatory,
-            boolean immediate) {
+    BasicPublish(int channel, ShortString exchange, ShortString routingKey, boolean mandatory,
+                 boolean immediate) {
         super(channel, CLASS_ID, METHOD_ID);
         this.exchange = exchange;
         this.routingKey = routingKey;

@@ -33,7 +33,7 @@ public abstract class GeneralFrame {
     private final byte type;
     private final int channel;
 
-    public GeneralFrame(byte type, int channel) {
+    GeneralFrame(byte type, int channel) {
         this.type = type;
         this.channel = channel;
     }

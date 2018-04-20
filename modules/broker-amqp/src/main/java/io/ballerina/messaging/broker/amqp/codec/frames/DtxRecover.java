@@ -31,7 +31,7 @@ public class DtxRecover extends MethodFrame {
     private static final short CLASS_ID = 100;
     private static final short METHOD_ID = 80;
 
-    public DtxRecover(int channel) {
+    private DtxRecover(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 
@@ -42,7 +42,7 @@ public class DtxRecover extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
-
+        // Nothing to be written.
     }
 
     @Override

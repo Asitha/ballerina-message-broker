@@ -35,7 +35,7 @@ public class DtxPrepareOk extends MethodFrame {
     private static final short METHOD_ID = 71;
     private final int xaResult;
 
-    public DtxPrepareOk(int channel, int xaResult) {
+    DtxPrepareOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }

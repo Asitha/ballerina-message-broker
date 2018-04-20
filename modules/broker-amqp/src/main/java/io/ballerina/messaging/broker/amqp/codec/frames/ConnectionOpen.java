@@ -34,7 +34,7 @@ import io.netty.channel.ChannelHandlerContext;
 public class ConnectionOpen extends MethodFrame {
     private final ShortString virtualHost;
 
-    public ConnectionOpen(ShortString virtualHost) {
+    private ConnectionOpen(ShortString virtualHost) {
         super(0, (short) 10, (short) 40);
         this.virtualHost = virtualHost;
     }

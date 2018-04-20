@@ -33,7 +33,7 @@ public class TxSelect extends MethodFrame {
     private static final short CLASS_ID = 90;
     private static final short METHOD_ID = 10;
 
-    public TxSelect(int channel) {
+    private TxSelect(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 
@@ -44,7 +44,7 @@ public class TxSelect extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
-        // Nothing to write
+        // Nothing to write.
     }
 
     @Override

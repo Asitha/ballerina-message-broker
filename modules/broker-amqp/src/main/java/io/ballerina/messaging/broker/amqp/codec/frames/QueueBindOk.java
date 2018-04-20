@@ -22,8 +22,6 @@ package io.ballerina.messaging.broker.amqp.codec.frames;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * AMQP frame for queue.bind-ok.
@@ -31,10 +29,12 @@ import org.slf4j.LoggerFactory;
  *     No parameters
  */
 public class QueueBindOk extends MethodFrame {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueueBindOk.class);
 
-    public QueueBindOk(int channel) {
-        super(channel, (short) 50, (short) 21);
+    private static final short CLASS_ID = 50;
+    private static final short METHOD_ID = 21;
+
+    QueueBindOk(int channel) {
+        super(channel, CLASS_ID, METHOD_ID);
     }
 
     @Override
@@ -44,6 +44,7 @@ public class QueueBindOk extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
+        // Nothing to be written.
     }
 
     @Override

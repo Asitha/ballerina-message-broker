@@ -32,7 +32,7 @@ public class DtxSelect extends MethodFrame {
     private static final short CLASS_ID = 100;
     private static final short METHOD_ID = 10;
 
-    public DtxSelect(int channel) {
+    private DtxSelect(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 
@@ -43,7 +43,7 @@ public class DtxSelect extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
-
+        // Nothing to be written.
     }
 
     @Override

@@ -36,7 +36,7 @@ public class DtxRollbackOk extends MethodFrame {
     private static final short METHOD_ID = 91;
     private final int xaResult;
 
-    public DtxRollbackOk(int channel, int xaResult) {
+    DtxRollbackOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }

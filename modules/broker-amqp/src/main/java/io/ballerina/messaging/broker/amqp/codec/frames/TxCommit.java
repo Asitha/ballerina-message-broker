@@ -41,7 +41,7 @@ public class TxCommit extends MethodFrame {
     private static final short CLASS_ID = 90;
     private static final short METHOD_ID = 20;
 
-    TxCommit(int channel) {
+    private TxCommit(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 

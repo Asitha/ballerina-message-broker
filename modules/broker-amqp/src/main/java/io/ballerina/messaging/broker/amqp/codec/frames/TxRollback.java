@@ -39,7 +39,7 @@ public class TxRollback extends MethodFrame {
     private static final short CLASS_ID = 90;
     private static final short METHOD_ID = 30;
 
-    public TxRollback(int channel) {
+    private TxRollback(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 
@@ -50,7 +50,7 @@ public class TxRollback extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
-        //ignore
+        // Nothing to be written.
     }
 
     @Override

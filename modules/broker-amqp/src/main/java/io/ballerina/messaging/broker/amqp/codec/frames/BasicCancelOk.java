@@ -31,7 +31,7 @@ public class BasicCancelOk extends MethodFrame {
 
     private final ShortString consumerTag;
 
-    public BasicCancelOk(int channel, ShortString consumerTag) {
+    BasicCancelOk(int channel, ShortString consumerTag) {
         super(channel, (short) 60, (short) 31);
         this.consumerTag = consumerTag;
     }

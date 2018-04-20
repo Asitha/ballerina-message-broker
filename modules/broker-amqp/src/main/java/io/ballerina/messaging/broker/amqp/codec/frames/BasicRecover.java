@@ -42,7 +42,7 @@ public class BasicRecover extends MethodFrame {
 
     private final boolean requeue;
 
-    public BasicRecover(int channel, boolean requeue) {
+    private BasicRecover(int channel, boolean requeue) {
         super(channel, (short) 60, (short) 110);
         this.requeue = requeue;
     }

@@ -34,7 +34,7 @@ public class QueueUnbindOk extends MethodFrame {
 
     private static final short METHOD_ID = 51;
 
-    public QueueUnbindOk(int channel) {
+    QueueUnbindOk(int channel) {
         super(channel, CLASS_ID, METHOD_ID);
     }
 
@@ -45,6 +45,7 @@ public class QueueUnbindOk extends MethodFrame {
 
     @Override
     protected void writeMethod(ByteBuf buf) {
+        // Nothing to be written.
     }
 
     @Override

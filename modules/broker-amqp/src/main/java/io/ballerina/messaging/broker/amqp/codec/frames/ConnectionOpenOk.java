@@ -29,7 +29,8 @@ import io.netty.channel.ChannelHandlerContext;
  *     1. reserved-1 (ShortString) - deprecated param
  */
 public class ConnectionOpenOk extends MethodFrame {
-    public ConnectionOpenOk() {
+
+    ConnectionOpenOk() {
         super(0, (short) 10, (short) 41);
     }
 

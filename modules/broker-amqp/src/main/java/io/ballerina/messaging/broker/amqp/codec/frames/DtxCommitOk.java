@@ -36,7 +36,7 @@ public class DtxCommitOk extends MethodFrame {
     private static final short METHOD_ID = 41;
     private final int xaResult;
 
-    public DtxCommitOk(int channel, int xaResult) {
+    DtxCommitOk(int channel, int xaResult) {
         super(channel, CLASS_ID, METHOD_ID);
         this.xaResult = xaResult;
     }
