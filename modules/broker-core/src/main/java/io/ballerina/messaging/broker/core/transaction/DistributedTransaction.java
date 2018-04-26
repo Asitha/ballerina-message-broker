@@ -85,7 +85,7 @@ public class DistributedTransaction implements BrokerTransaction {
 
     @Override
     public void addPostTransactionAction(Action postTransactionAction) {
-
+        // Nothing to do.
     }
 
     @Override
