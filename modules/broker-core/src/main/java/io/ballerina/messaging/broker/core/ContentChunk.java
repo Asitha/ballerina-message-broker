@@ -21,6 +21,7 @@ package io.ballerina.messaging.broker.core;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Represents part of the content of a message.
@@ -29,34 +30,37 @@ public class ContentChunk {
 
     private final long offset;
 
-    private final ByteBuf content;
+    private final byte[] content;
+
+    private final ContentTracker tracker;
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Data holder class for content chunks.")
-    public ContentChunk(long offset, ByteBuf content) {
+    public ContentChunk(ContentTracker tracker, long offset, byte[] content) {
         this.offset = offset;
         this.content = content;
+        this.tracker = tracker;
+        tracker.track(content.length);
     }
 
     public long getOffset() {
         return offset;
     }
 
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Data holder class for content chunks.")
+    /**
+     * Wraps the internal byte[] and returns a {@link ByteBuf}
+     *
+     * @return Wrapped {@link ByteBuf}
+     */
     public ByteBuf getByteBuf() {
+        return Unpooled.wrappedBuffer(content);
+    }
+
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Data holder class for content chunks.")
+    public byte[] getBytes() {
         return content;
     }
 
-    public byte[] getBytes() {
-        byte[] bytes = new byte[content.readableBytes()];
-        content.getBytes(0, bytes);
-        return bytes;
-    }
-
     public void release() {
-        content.release();
-    }
-
-    ContentChunk shallowCopy() {
-        return new ContentChunk(offset, content.retainedSlice());
+        tracker.untrack(content.length);
     }
 }

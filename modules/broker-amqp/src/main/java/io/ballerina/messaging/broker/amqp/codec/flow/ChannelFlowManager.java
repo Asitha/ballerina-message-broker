@@ -21,6 +21,7 @@ package io.ballerina.messaging.broker.amqp.codec.flow;
 
 import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.frames.ChannelFlow;
+import io.ballerina.messaging.broker.core.TrackedContentLimitListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * ChannelFlowManager is responsible for managing flow rate of publishers. The flow should be disabled and enabled
  * depending on the server load.
  */
-public class ChannelFlowManager {
+public class ChannelFlowManager implements TrackedContentLimitListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChannelFlowManager.class);
 
     private final int highLimit;
@@ -47,18 +48,36 @@ public class ChannelFlowManager {
     public void notifyMessageAddition(ChannelHandlerContext ctx) {
         messagesInFlight++;
         if (messagesInFlight > highLimit && inflowEnabled) {
-            inflowEnabled = false;
-            ctx.writeAndFlush(new ChannelFlow(channel.getChannelId(), false));
-            LOGGER.info("Inflow disabled for channel {}-{}", channel.getChannelId(), ctx.channel().remoteAddress());
+            disableInflow(ctx);
         }
+    }
+
+    private void disableInflow(ChannelHandlerContext ctx) {
+        inflowEnabled = false;
+        ctx.writeAndFlush(new ChannelFlow(channel.getChannelId(), false));
+        LOGGER.info("Inflow disabled for channel {}-{}", channel.getChannelId(), ctx.channel().remoteAddress());
     }
 
     public void notifyMessageRemoval(ChannelHandlerContext ctx) {
         messagesInFlight--;
         if (messagesInFlight < lowLimit && !inflowEnabled) {
-            inflowEnabled = true;
-            ctx.writeAndFlush(new ChannelFlow(channel.getChannelId(), true));
-            LOGGER.info("Inflow enabled for channel {}-{}", channel.getChannelId(), ctx.channel().remoteAddress());
+            enableInflow(ctx);
         }
+    }
+
+    private void enableInflow(ChannelHandlerContext ctx) {
+        inflowEnabled = true;
+        ctx.writeAndFlush(new ChannelFlow(channel.getChannelId(), true));
+        LOGGER.info("Inflow enabled for channel {}-{}", channel.getChannelId(), ctx.channel().remoteAddress());
+    }
+
+    @Override
+    public void highWatermarkReached() {
+        disableInflow(channel.getChannelHandlerContext());
+    }
+
+    @Override
+    public void lowWatermarkReached() {
+        enableInflow(channel.getChannelHandlerContext());
     }
 }

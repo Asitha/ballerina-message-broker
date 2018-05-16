@@ -32,6 +32,7 @@ import io.ballerina.messaging.broker.core.Message;
 import io.ballerina.messaging.broker.core.Metadata;
 import io.ballerina.messaging.broker.core.util.MessageTracer;
 import io.ballerina.messaging.broker.core.util.TraceField;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,9 +106,10 @@ public class AmqpDeliverMessage {
             ctx.write(basicDeliverFrame);
             ctx.write(headerFrame);
             for (ContentChunk chunk : message.getContentChunks()) {
+                ByteBuf byteBuf = chunk.getByteBuf();
                 ContentFrame contentFrame = new ContentFrame(channel.getChannelId(),
-                                                             chunk.getByteBuf().capacity(),
-                                                             chunk.getByteBuf());
+                                                             byteBuf.capacity(),
+                                                             byteBuf);
                 ctx.write(contentFrame);
             }
 

@@ -25,12 +25,11 @@ import io.ballerina.messaging.broker.common.DaoException;
 import io.ballerina.messaging.broker.core.Broker;
 import io.ballerina.messaging.broker.core.ChunkConverter;
 import io.ballerina.messaging.broker.core.ContentChunk;
+import io.ballerina.messaging.broker.core.ContentChunkFactory;
 import io.ballerina.messaging.broker.core.Message;
 import io.ballerina.messaging.broker.core.Metadata;
 import io.ballerina.messaging.broker.core.store.QueueDetachEventList;
 import io.ballerina.messaging.broker.core.transaction.XidImpl;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -47,13 +46,16 @@ import javax.transaction.xa.Xid;
 /**
  * DAO class with base message operations needed for distributed transactions.
  */
-public class DtxCrudOperationsDao extends BaseDao {
+class DtxCrudOperationsDao extends BaseDao {
 
     private ChunkConverter chunkConverter;
+    private final ContentChunkFactory contentChunkFactory;
 
-    DtxCrudOperationsDao(DataSource dataSource, ChunkConverter chunkConverter) {
+    DtxCrudOperationsDao(DataSource dataSource, ChunkConverter chunkConverter,
+                         ContentChunkFactory contentChunkFactory) {
         super(dataSource);
         this.chunkConverter = chunkConverter;
+        this.contentChunkFactory = contentChunkFactory;
     }
 
     long storeXid(Connection connection, Xid xid) throws SQLException {
@@ -158,7 +160,7 @@ public class DtxCrudOperationsDao extends BaseDao {
         }
     }
 
-    public void copyEnqueueMessages(Connection connection, long internalXid) throws SQLException {
+    void copyEnqueueMessages(Connection connection, long internalXid) throws SQLException {
         copyFromPreparedTables(connection, internalXid, RDBMSConstants.PS_DTX_COPY_ENQUEUE_METADATA);
         copyFromPreparedTables(connection, internalXid, RDBMSConstants.PS_DTX_COPY_ENQUEUE_CONTENT);
         copyFromPreparedTables(connection, internalXid, RDBMSConstants.PS_DTX_COPY_ENQUEUE_QUEUE_ATTACHEMENTS);
@@ -177,7 +179,7 @@ public class DtxCrudOperationsDao extends BaseDao {
         }
     }
 
-    public void removePreparedData(Connection connection, long internalXid) throws SQLException {
+    void removePreparedData(Connection connection, long internalXid) throws SQLException {
         PreparedStatement deleteXidStatement = null;
         try {
             deleteXidStatement = connection.prepareStatement(RDBMSConstants.PS_DTX_DELETE_XID);
@@ -188,7 +190,7 @@ public class DtxCrudOperationsDao extends BaseDao {
         }
     }
 
-    public void restoreDequeueMessages(Connection connection, long internalXid) throws SQLException {
+    void restoreDequeueMessages(Connection connection, long internalXid) throws SQLException {
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(RDBMSConstants.PS_DTX_RESTORE_DEQUEUE_MAPPING);
@@ -199,7 +201,7 @@ public class DtxCrudOperationsDao extends BaseDao {
         }
     }
 
-    public void retrieveAllXids(Connection connection, Consumer<XidImpl> xidConsumer) throws SQLException {
+    void retrieveAllXids(Connection connection, Consumer<XidImpl> xidConsumer) throws SQLException {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -220,7 +222,7 @@ public class DtxCrudOperationsDao extends BaseDao {
         }
     }
 
-    public Collection<Message> retrieveEnqueuedMessages(Connection connection, long internalXid)
+    Collection<Message> retrieveEnqueuedMessages(Connection connection, long internalXid)
             throws DaoException {
         HashMap<Long, Message> enqueuedMessages = new HashMap<>();
         try {
@@ -270,8 +272,7 @@ public class DtxCrudOperationsDao extends BaseDao {
                 Message message = enqueuedMessages.get(messageId);
                 long offset = resultSet.getLong("CONTENT_OFFSET");
                 byte[] contentBytes = resultSet.getBytes("MESSAGE_CONTENT");
-                ByteBuf byteBuf = Unpooled.wrappedBuffer(contentBytes);
-                message.addChunk(new ContentChunk(offset, byteBuf));
+                message.addChunk(contentChunkFactory.getNewChunk(offset, contentBytes));
             }
         } finally {
             close(resultSet);

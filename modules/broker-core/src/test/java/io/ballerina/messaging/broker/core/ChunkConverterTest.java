@@ -1,12 +1,12 @@
 package io.ballerina.messaging.broker.core;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -14,6 +14,12 @@ import java.util.Random;
  * Test chunk converter.
  */
 public class ChunkConverterTest {
+
+    private ContentChunkFactory factory;
+    @BeforeMethod
+    public void setUp() {
+        factory = new ContentChunkFactory(new ContentTracker(1000, 100));
+    }
 
     @Test
     public void testConvertLarge() {
@@ -69,10 +75,8 @@ public class ChunkConverterTest {
 
     private String getString(List<ContentChunk> chunkList, int chunkLength) {
         ContentReader contentReader = new ContentReader(chunkList);
-        ByteBuf convertedByteBuf = contentReader.getNextBytes(chunkLength);
-        byte[] convertedContent = new byte[chunkLength];
-        convertedByteBuf.getBytes(0, convertedContent);
-        return new String(convertedContent, StandardCharsets.UTF_8);
+        byte[] bytes = contentReader.getNextBytes(chunkLength);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private List<ContentChunk> createContentChunk(int chunkLength) {
@@ -87,10 +91,10 @@ public class ChunkConverterTest {
         int chunkSize = dataBytes.length / numberOfChunks;
         for (int i = 0; i < numberOfChunks; i++) {
             int offset = i * chunkSize;
-            ByteBuf buffer = Unpooled.wrappedBuffer(dataBytes,
-                                                    offset,
-                                                    Math.min(chunkSize, dataBytes.length - offset));
-            chunkList.add(new ContentChunk(0, buffer));
+
+            byte[] bytes = Arrays.copyOfRange(dataBytes, offset,
+                                              (offset + Math.min(chunkSize, dataBytes.length - offset)));
+            chunkList.add(factory.getNewChunk(offset, bytes));
         }
 
         return chunkList;

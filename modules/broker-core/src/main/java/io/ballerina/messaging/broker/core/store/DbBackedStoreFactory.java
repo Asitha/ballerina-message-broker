@@ -20,6 +20,7 @@
 package io.ballerina.messaging.broker.core.store;
 
 import io.ballerina.messaging.broker.core.BrokerException;
+import io.ballerina.messaging.broker.core.ContentChunkFactory;
 import io.ballerina.messaging.broker.core.DbBackedQueueHandlerFactory;
 import io.ballerina.messaging.broker.core.ExchangeRegistry;
 import io.ballerina.messaging.broker.core.QueueRegistry;
@@ -40,10 +41,9 @@ public class DbBackedStoreFactory implements StoreFactory {
 
     private DbMessageStore dbMessageStore;
 
-    public DbBackedStoreFactory(DataSource dataSource,
-                                BrokerMetricManager metricManager,
-                                BrokerCoreConfiguration configuration) {
-        daoFactory = new DaoFactory(dataSource, metricManager, configuration);
+    public DbBackedStoreFactory(DataSource dataSource, BrokerMetricManager metricManager,
+                                BrokerCoreConfiguration configuration, ContentChunkFactory contentChunkFactory) {
+        daoFactory = new DaoFactory(dataSource, metricManager, configuration, contentChunkFactory);
         this.metricManager = metricManager;
         this.configuration = configuration;
         dbMessageStore = new DbMessageStore(daoFactory.createMessageDao(), 32768, 1024);

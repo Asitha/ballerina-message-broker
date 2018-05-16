@@ -28,6 +28,7 @@ import io.ballerina.messaging.broker.common.data.types.ShortString;
 import io.ballerina.messaging.broker.core.Broker;
 import io.ballerina.messaging.broker.core.BrokerException;
 import io.ballerina.messaging.broker.core.ContentChunk;
+import io.ballerina.messaging.broker.core.ContentChunkFactory;
 import io.ballerina.messaging.broker.core.Message;
 import io.ballerina.messaging.broker.core.Metadata;
 import io.ballerina.messaging.broker.core.transaction.BrokerTransaction;
@@ -54,14 +55,17 @@ public class InMemoryMessageAggregator {
 
     private BrokerTransaction transaction;
 
+    private final ContentChunkFactory contentChunkFactory;
+
     private String routingKey;
 
     private String exchangeName;
 
     private long receivedPayloadSize;
 
-    InMemoryMessageAggregator(BrokerTransaction transaction) {
+    InMemoryMessageAggregator(BrokerTransaction transaction, ContentChunkFactory contentChunkFactory) {
         this.transaction = transaction;
+        this.contentChunkFactory = contentChunkFactory;
     }
 
     public void basicPublishReceived(ShortString routingKey, ShortString exchangeName) {
@@ -112,20 +116,26 @@ public class InMemoryMessageAggregator {
     }
 
     public boolean contentBodyReceived(long length, ByteBuf payload) throws AmqpException {
-        ContentChunk contentChunk = new ContentChunk(receivedPayloadSize, payload);
-        message.addChunk(contentChunk);
-        receivedPayloadSize += length;
-        long contentLength = message.getMetadata().getContentLength();
+        try {
+            receivedPayloadSize += length;
+            long contentLength = message.getMetadata().getContentLength();
+            if (contentLength < receivedPayloadSize) {
+                message.release();
+                long actualLength = receivedPayloadSize;
+                clear();
+                throw new AmqpException("Content length mismatch. Received: " + actualLength
+                                                + " expected: " + contentLength);
+            }
 
-        if (contentLength == receivedPayloadSize) {
-            return true;
-        } else if (contentLength < receivedPayloadSize) {
-            clear();
-            message.release();
-            throw new AmqpException("Content length mismatch. Received content more than the expected size");
+            byte[] bytes = new byte[payload.readableBytes()];
+            payload.getBytes(0, bytes);
+            ContentChunk contentChunk = contentChunkFactory.getNewChunk(receivedPayloadSize, bytes);
+            message.addChunk(contentChunk);
+
+            return (receivedPayloadSize == contentLength);
+        } finally {
+            payload.release();
         }
-
-        return false;
     }
 
     public Message popMessage() {

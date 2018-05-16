@@ -20,6 +20,7 @@
 package io.ballerina.messaging.broker.core.store.dao.impl;
 
 import io.ballerina.messaging.broker.core.ChunkConverter;
+import io.ballerina.messaging.broker.core.ContentChunkFactory;
 import io.ballerina.messaging.broker.core.configuration.BrokerCoreConfiguration;
 import io.ballerina.messaging.broker.core.metrics.BrokerMetricManager;
 import io.ballerina.messaging.broker.core.store.dao.BindingDao;
@@ -36,15 +37,16 @@ public class DaoFactory {
 
     private final DataSource dataSource;
     private final BrokerMetricManager metricManager;
+    private final ContentChunkFactory contentChunkFactory;
     private ChunkConverter chunkConverter;
 
-    public DaoFactory(DataSource dataSource,
-                      BrokerMetricManager metricManager,
-                      BrokerCoreConfiguration configuration) {
+    public DaoFactory(DataSource dataSource, BrokerMetricManager metricManager,
+                      BrokerCoreConfiguration configuration, ContentChunkFactory contentChunkFactory) {
         this.dataSource = dataSource;
         this.metricManager = metricManager;
+        this.contentChunkFactory = contentChunkFactory;
         int maxPersistedChunkSize = Integer.parseInt(configuration.getMaxPersistedChunkSize());
-        chunkConverter = new ChunkConverter(maxPersistedChunkSize);
+        chunkConverter = new ChunkConverter(maxPersistedChunkSize, contentChunkFactory);
     }
 
     public QueueDao createQueueDao() {
@@ -52,8 +54,9 @@ public class DaoFactory {
     }
 
     public MessageDao createMessageDao() {
-        return new MessageDaoImpl(new MessageCrudOperationsDao(dataSource, metricManager, chunkConverter),
-                                  new DtxCrudOperationsDao(dataSource, chunkConverter));
+        return new MessageDaoImpl(new MessageCrudOperationsDao(dataSource, metricManager,
+                                                               chunkConverter, contentChunkFactory),
+                                  new DtxCrudOperationsDao(dataSource, chunkConverter, contentChunkFactory));
     }
 
     public ExchangeDao createExchangeDao() {

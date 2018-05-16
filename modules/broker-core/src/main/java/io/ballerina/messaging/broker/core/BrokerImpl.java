@@ -107,6 +107,10 @@ public final class BrokerImpl implements Broker {
 
     private final MessageDeliveryTaskFactory messageDeliveryTaskFactory;
 
+    private final ContentChunkFactory contentChunkFactory;
+
+    private final ContentTracker contentTracker;
+
     public BrokerImpl(StartupContext startupContext) throws Exception {
         MetricService metrics = startupContext.getService(MetricService.class);
         metricManager = getMetricManager(metrics);
@@ -114,7 +118,13 @@ public final class BrokerImpl implements Broker {
         BrokerConfigProvider configProvider = startupContext.getService(BrokerConfigProvider.class);
         BrokerCoreConfiguration configuration = configProvider.getConfigurationObject(BrokerCoreConfiguration.NAMESPACE,
                                                                                       BrokerCoreConfiguration.class);
-        StoreFactory storeFactory = getStoreFactory(startupContext, configProvider, configuration);
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        long highWaterMark = (long) Math.ceil(maxMemory * 0.7);
+        long lowWaterMark = (long) Math.ceil(maxMemory * 0.3);
+        contentTracker = new ContentTracker(highWaterMark, lowWaterMark);
+        contentChunkFactory = new ContentChunkFactory(contentTracker);
+
+        StoreFactory storeFactory = getStoreFactory(startupContext, configProvider, configuration, contentChunkFactory);
 
         exchangeRegistry = storeFactory.getExchangeRegistry();
         messageStore = storeFactory.getMessageStore();
@@ -131,12 +141,20 @@ public final class BrokerImpl implements Broker {
         startupContext.registerService(Broker.class, this);
         initRestApi(startupContext);
         initHaSupport(startupContext);
+    }
 
+    public void addContentTrackerListener(TrackedContentLimitListener listener) {
+        contentTracker.addListener(listener);
+    }
+
+    public ContentChunkFactory getContentChunkFactory() {
+        return contentChunkFactory;
     }
 
     private StoreFactory getStoreFactory(StartupContext startupContext,
                                          BrokerConfigProvider configProvider,
-                                         BrokerCoreConfiguration configuration) throws Exception {
+                                         BrokerCoreConfiguration configuration,
+                                         ContentChunkFactory contentChunkFactory) throws Exception {
         BrokerCommonConfiguration commonConfigs
                 = configProvider.getConfigurationObject(BrokerCommonConfiguration.NAMESPACE,
                 BrokerCommonConfiguration.class);
@@ -150,7 +168,7 @@ public final class BrokerImpl implements Broker {
         if (commonConfigs.getEnableInMemoryMode()) {
             return new MemBackedStoreFactory(metricManager, configuration);
         } else {
-            return new DbBackedStoreFactory(dataSource, metricManager, configuration);
+            return new DbBackedStoreFactory(dataSource, metricManager, configuration, contentChunkFactory);
         }
     }
 

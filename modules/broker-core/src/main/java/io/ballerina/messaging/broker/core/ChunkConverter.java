@@ -9,9 +9,11 @@ import java.util.List;
 public class ChunkConverter {
 
     private int maxChunkSizeLimit;
+    private final ContentChunkFactory contentChunkFactory;
 
-    public ChunkConverter(int maxChunkSizeLimit) {
+    public ChunkConverter(int maxChunkSizeLimit, ContentChunkFactory contentChunkFactory) {
         this.maxChunkSizeLimit = maxChunkSizeLimit;
+        this.contentChunkFactory = contentChunkFactory;
     }
 
     public List<ContentChunk> convert(List<ContentChunk> chunkList, long totalLength) {
@@ -26,13 +28,13 @@ public class ChunkConverter {
         ContentReader contentReader = new ContentReader(chunkList);
 
         while (pendingBytes > 0) {
-            long newBufferLength = Math.min(pendingBytes, maxChunkSizeLimit);
-            ContentChunk newChunk = new ContentChunk(offset,
-                                                     contentReader.getNextBytes((int) newBufferLength));
+            long newChunkLength = Math.min(pendingBytes, maxChunkSizeLimit);
+            ContentChunk newChunk = contentChunkFactory.getNewChunk(offset,
+                                                                    contentReader.getNextBytes((int) newChunkLength));
             convertedChunks.add(newChunk);
 
-            pendingBytes = pendingBytes - newBufferLength;
-            offset = offset + newBufferLength;
+            pendingBytes = pendingBytes - newChunkLength;
+            offset = offset + newChunkLength;
         }
 
         return convertedChunks;
@@ -41,7 +43,7 @@ public class ChunkConverter {
     private boolean isChunksUnderLimit(List<ContentChunk> chunkList) {
         boolean allChunksUnderLimit = true;
         for (ContentChunk chunk : chunkList) {
-            if (chunk.getByteBuf().readableBytes() > maxChunkSizeLimit) {
+            if (chunk.getBytes().length > maxChunkSizeLimit) {
                 allChunksUnderLimit = false;
                 break;
             }

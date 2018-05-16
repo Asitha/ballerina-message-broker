@@ -302,4 +302,8 @@ public interface Broker {
      * @param messages
      */
     Set<QueueHandler> restoreDtxPreparedMessages(Xid xid, Collection<Message> messages) throws BrokerException;
+
+    void addContentTrackerListener(TrackedContentLimitListener listener);
+
+    ContentChunkFactory getContentChunkFactory();
 }

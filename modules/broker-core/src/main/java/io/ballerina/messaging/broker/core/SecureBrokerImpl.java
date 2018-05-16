@@ -308,4 +308,14 @@ public class SecureBrokerImpl implements Broker {
     public Set<QueueHandler> restoreDtxPreparedMessages(Xid xid, Collection<Message> messages) throws BrokerException {
         return broker.restoreDtxPreparedMessages(xid, messages);
     }
+
+    @Override
+    public void addContentTrackerListener(TrackedContentLimitListener listener) {
+        broker.addContentTrackerListener(listener);
+    }
+
+    @Override
+    public ContentChunkFactory getContentChunkFactory() {
+        return broker.getContentChunkFactory();
+    }
 }

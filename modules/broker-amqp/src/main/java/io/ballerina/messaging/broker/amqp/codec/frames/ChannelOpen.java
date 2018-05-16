@@ -19,6 +19,7 @@
 
 package io.ballerina.messaging.broker.amqp.codec.frames;
 
+import io.ballerina.messaging.broker.amqp.codec.AmqpChannel;
 import io.ballerina.messaging.broker.amqp.codec.ConnectionException;
 import io.ballerina.messaging.broker.amqp.codec.handlers.AmqpConnectionHandler;
 import io.netty.buffer.ByteBuf;
@@ -55,8 +56,9 @@ public class ChannelOpen extends MethodFrame {
     public void handle(ChannelHandlerContext ctx, AmqpConnectionHandler connectionHandler) {
         try {
             int channelId = getChannel();
-            connectionHandler.createChannel(channelId);
+            AmqpChannel channel = connectionHandler.createChannel(channelId, ctx);
             ctx.writeAndFlush(new ChannelOpenOk(channelId));
+            channel.registerInflowManager();
         } catch (ConnectionException e) {
             LOGGER.warn("Error while creating channel for ID " + getChannel(), e);
             ctx.writeAndFlush(ConnectionClose.getInstance(CLASS_ID, METHOD_ID, e));

@@ -82,6 +82,8 @@ public class AmqpChannel {
 
     private final AmqpMetricManager metricManager;
 
+    private final ChannelHandlerContext channelHandlerContext;
+
     private final Map<ShortString, AmqpConsumer> consumerMap;
 
     private final InMemoryMessageAggregator messageAggregator;
@@ -138,13 +140,14 @@ public class AmqpChannel {
     public AmqpChannel(AmqpServerConfiguration configuration,
                        Broker broker,
                        int channelId,
-                       AmqpMetricManager metricManager) {
+                       AmqpMetricManager metricManager, ChannelHandlerContext ctx) {
         this.broker = broker;
         this.channelId = channelId;
         this.metricManager = metricManager;
+        channelHandlerContext = ctx;
         this.consumerMap = new HashMap<>();
         this.transaction = new AutoCommitTransaction(broker);
-        this.messageAggregator = new InMemoryMessageAggregator(transaction);
+        this.messageAggregator = new InMemoryMessageAggregator(transaction, broker.getContentChunkFactory());
         this.flowManager = new ChannelFlowManager(this,
                                                   configuration.getChannelFlow().getLowLimit(),
                                                   configuration.getChannelFlow().getHighLimit());
@@ -268,6 +271,9 @@ public class AmqpChannel {
         return deliveryTagGenerator.incrementAndGet();
     }
 
+    public ChannelHandlerContext getChannelHandlerContext() {
+        return channelHandlerContext;
+    }
     /**
      * Getter for channelId.
      */
@@ -470,6 +476,10 @@ public class AmqpChannel {
 
     public void setTimeout(Xid xid, long timeout) throws ValidationException {
         transaction.setTimeout(xid, timeout, TimeUnit.SECONDS);
+    }
+
+    public void registerInflowManager() {
+        broker.addContentTrackerListener(flowManager);
     }
 
     /**

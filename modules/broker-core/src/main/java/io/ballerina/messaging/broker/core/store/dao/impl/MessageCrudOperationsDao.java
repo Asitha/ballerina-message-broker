@@ -24,11 +24,11 @@ import io.ballerina.messaging.broker.common.BaseDao;
 import io.ballerina.messaging.broker.core.BrokerException;
 import io.ballerina.messaging.broker.core.ChunkConverter;
 import io.ballerina.messaging.broker.core.ContentChunk;
+import io.ballerina.messaging.broker.core.ContentChunkFactory;
 import io.ballerina.messaging.broker.core.Message;
 import io.ballerina.messaging.broker.core.Metadata;
 import io.ballerina.messaging.broker.core.metrics.BrokerMetricManager;
 import io.ballerina.messaging.broker.core.store.QueueDetachEventList;
-import io.netty.buffer.Unpooled;
 import org.wso2.carbon.metrics.core.Timer.Context;
 
 import java.sql.Connection;
@@ -50,18 +50,19 @@ class MessageCrudOperationsDao extends BaseDao {
 
     private final BrokerMetricManager metricManager;
     private final ChunkConverter chunkConverter;
+    private final ContentChunkFactory contentChunkFactory;
 
     /**
      * temp storage for messages loaded from DB when restarting the message broker.
      */
     private Map<Long, Message> storedMessageCache = new ConcurrentHashMap<>();
 
-    MessageCrudOperationsDao(DataSource dataSource,
-                             BrokerMetricManager metricManager,
-                             ChunkConverter chunkConverter) {
+    MessageCrudOperationsDao(DataSource dataSource, BrokerMetricManager metricManager,
+                             ChunkConverter chunkConverter, ContentChunkFactory contentChunkFactory) {
         super(dataSource);
         this.metricManager = metricManager;
         this.chunkConverter = chunkConverter;
+        this.contentChunkFactory = contentChunkFactory;
     }
 
     @SuppressFBWarnings(
@@ -290,13 +291,13 @@ class MessageCrudOperationsDao extends BaseDao {
 
             while (contentResultSet.next()) {
                 long messageId = contentResultSet.getLong(1);
-                int offset = contentResultSet.getInt(2);
+                long offset = contentResultSet.getLong(2);
                 byte[] bytes = contentResultSet.getBytes(3);
 
                 List<Message> messages = messageMap.get(messageId);
                 for (Message message : messages) {
                     if (Objects.nonNull(message)) {
-                        message.addChunk(new ContentChunk(offset, Unpooled.wrappedBuffer(bytes)));
+                        message.addChunk(contentChunkFactory.getNewChunk(offset, bytes));
                     }
                 }
             }

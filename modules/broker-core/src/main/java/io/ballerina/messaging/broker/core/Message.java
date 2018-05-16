@@ -39,7 +39,7 @@ public class Message {
 
     private Metadata metadata;
 
-    private final List<ContentChunk> contentChunks;
+    private List<ContentChunk> contentChunks;
 
     private final MessageDataHolder messageDataHolder;
 
@@ -69,9 +69,7 @@ public class Message {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Release message with id: {}", getInternalId(), new Throwable());
         }
-        for (ContentChunk contentChunk : contentChunks) {
-            contentChunk.release();
-        }
+        contentChunks.forEach(ContentChunk::release);
     }
 
     public Message shallowCopy() {
@@ -103,7 +101,8 @@ public class Message {
     }
 
     private void shallowCopyContent(Message message) {
-        contentChunks.stream().map(ContentChunk::shallowCopy).forEach(message::addChunk);
+        message.contentChunks = contentChunks;
+//        contentChunks.stream().map(ContentChunk::shallowCopy).forEach(message::addChunk);
     }
 
     public void addAttachedDurableQueue(String queueName) {
